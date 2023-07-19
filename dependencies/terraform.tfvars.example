@@ -1,0 +1,38 @@
+# Rename to terraform.tfvars
+
+project = "my-gcp-mastodon-project-999999"
+
+credentials_file_path = "../terraform-sa.json"
+
+service_account_name = "terraform-sa"
+
+mastodon_domain_name = "example.com"
+
+storage_domain_name = "files.example.com"
+
+additional_dns_records = [
+  {
+    type    = "TXT"
+    name    = "example.com."
+    rrdatas = ["google-site-verification=5GtVM5tKHjE8vo8VTyB3G-4UnCaD1EKuJ4SnLocDt55"]
+    ttl     = 3600
+  },
+  {
+    type    = "CNAME"
+    name    = "em3563.example.com."
+    rrdatas = ["v12345678.wl123.sendgrid.net."]
+    ttl     = 3600
+  },
+  {
+    type    = "CNAME",
+    name    = "s1._domainkey.interledger.social.",
+    rrdatas = ["s1.domainkey.v12345678.wl123.sendgrid.net."]
+    ttl     = 3600
+  },
+  {
+    type    = "CNAME",
+    name    = "s2._domainkey.interledger.social."
+    rrdatas = ["s2.domainkey.v12345678.wl123.sendgrid.net."],
+    ttl     = 3600
+  }
+]

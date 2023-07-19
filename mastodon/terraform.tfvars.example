@@ -1,0 +1,23 @@
+# Rename to terraform.tfvars
+
+project = "my-gcp-mastodon-project-999999"
+
+credentials_file_path = "../terraform-sa.json"
+
+# Mastodon Helm chart env vars
+create_admin             = true
+create_admin_email       = "pat@example.com"
+create_admin_username    = "Pat"
+local_domain             = "example.com"
+otp_secret               = "1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890abcdefghij"
+secret_key_base          = "jihgfedcba0987654321zyxwvutsrqponmlkjihgfedcba0987654321zyxwvutsrqponmlkjihgfedcba0987654321zyxwvutsrqponmlkjihgfedcba0987654321"
+smtp_auth_method         = "plain"
+smtp_enable_starttls     = "auto"
+smtp_from_address        = "notifications@example.com"
+smtp_login               = "apikey"
+smtp_openssl_verify_mode = "peer"
+smtp_password            = "1234567890abcdefghijkl.MNOPQRSTUVQWXYZ1234567890abcd_EF_g_HIJKLmNO"
+smtp_port                = 587
+smtp_server              = "smtp.sendgrid.net"
+vapid_private_key        = "1234567890ABCDEFGHIJKLMNOPQRSTUVWZYZabcdefg="
+vapid_public_key         = "AB-CDEFGHIJKLMNOPQRSTUVWYZ1234567890abcdefghijklmnopqrstuvwxyz1234567-90ABCDEFGHIJKLMNO="
