@@ -57,7 +57,7 @@ Run `terraform init` in both module directories.
 
 1. Clone the Mastodon Helm chart into `./charts` because it is not published anywhere [yet](https://github.com/mastodon/chart/issues/27). `cd ./charts && git clone https://github.com/mastodon/chart.git --single-branch --branch=main --depth=1 && cd chart && helm dep update`
 
-_2023-07-19 note: The official Helm chart requires bug fixes not yet merged into main: [#60](https://github.com/mastodon/chart/pull/60), [#75](https://github.com/mastodon/chart/pull/75), [#80](https://github.com/mastodon/chart/issues/80)_
+_2023-07-20 note: The official Helm chart requires fixes not yet merged into main: [#75](https://github.com/mastodon/chart/pull/75), [#81](https://github.com/mastodon/chart/pull/81), [#82](https://github.com/mastodon/chart/pull/82)_
 
 2. Create a `terraform.tfvars` file in `./mastodon/` with the necessary variables. See the [`mastodon/terraform.tfvars.example`](./mastodon/terraform.tfvars.example) file for guidance.
 
