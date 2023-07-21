@@ -171,12 +171,12 @@ resource "google_dns_record_set" "additional_dns_records" {
 resource "google_storage_bucket" "storage" {
   name                        = var.storage_domain_name
   location                    = var.region
-  uniform_bucket_level_access = true
+  uniform_bucket_level_access = false
   storage_class               = "STANDARD"
 
   cors {
     origin          = ["*"]
-    method          = ["GET", "HEAD", "PUT", "POST", "DELETE"]
+    method          = ["GET", "HEAD"]
     response_header = ["*"]
     max_age_seconds = 3600
   }
