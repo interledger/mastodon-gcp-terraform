@@ -16,12 +16,12 @@ Additional GCP-specific functionality:
 - [Google-managed TLS certificates](https://cloud.google.com/kubernetes-engine/docs/how-to/managed-certs)
 - Ingress rule to redirect `http` traffic to `https`
 
-This project was tested on 2023-09-22 with:
+This project was tested on 2024-09-30 with:
 
-- GKE 1.27.3
-- helm 3.12.3
-- Mastodon chart 4.0.0 (* see below)
-- Mastodon app 4.2.0
+- GKE 1.30.3-gke.1969001
+- helm 3.16.1
+- Mastodon chart 5.4.0 (* see below)
+- Mastodon app 4.2.12
 
 ## How to use
 
@@ -57,8 +57,6 @@ Run `terraform init` in both module directories.
 
 1. Clone the Mastodon Helm chart into `./charts` because it is not published anywhere [yet](https://github.com/mastodon/chart/issues/27). `cd ./charts && git clone https://github.com/mastodon/chart.git --single-branch --branch=main --depth=1 && cd chart && helm dep update`
 
-_2023-07-20 note: The official Helm chart requires fixes not yet merged into main: [#75](https://github.com/mastodon/chart/pull/75), [#81](https://github.com/mastodon/chart/pull/81), [#82](https://github.com/mastodon/chart/pull/82)_
-
 2. Create a `terraform.tfvars` file in `./mastodon/` with the necessary variables. See the [`mastodon/terraform.tfvars.example`](./mastodon/terraform.tfvars.example) file for guidance.
 
 3. `cd ./mastodon && terraform apply`
@@ -71,7 +69,18 @@ _2023-07-20 note: The official Helm chart requires fixes not yet merged into mai
 
 ## Troubleshooting
 
+### HTTPS
+
 If you get HTTPS-related errors, but everything else seems ok, check the status of the certificate with `kubectl get ManagedCertificate mastodon-cert -n mastodon`. Provisioning a Google-managed certificate can take [up to an hour](https://cloud.google.com/load-balancing/docs/ssl-certificates/troubleshooting#certificate-managed-status).
+
+### Upgrading to Mastodon 4.3
+
+You must generate encryption secrets environment variables before upgrading.
+
+1. `kubectl -n mastodon get pods` to list the pods. Look for something with "mastodon-web".
+2. `kubectl -n mastodon exec --stdin --tty mastodon-web-99z999z9z9-99zz9 -- /bin/bash` to connect to the container.
+3. `bin/rails db:encryption:init` to generate the new encryption secrets environment variables.
+4. Add the credentials to your `terraform.tfvars` file as `active_record_encryption_primary_key`, `active_record_encryption_deterministic_key`, and `active_record_encryption_key_derivation_salt`.
 
 ## License
 

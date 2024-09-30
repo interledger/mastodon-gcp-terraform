@@ -165,6 +165,18 @@ resource "helm_release" "mastodon" {
     name  = "mastodon.secrets.vapid.public_key"
     value = var.vapid_public_key
   }
+  set_sensitive {
+    name  = "mastodon.secrets.activeRecordEncryption.primaryKey"
+    value = var.active_record_encryption_primary_key
+  }
+  set_sensitive {
+    name  = "mastodon.secrets.activeRecordEncryption.deterministicKey"
+    value = var.active_record_encryption_deterministic_key
+  }
+  set_sensitive {
+    name  = "mastodon.secrets.activeRecordEncryption.keyDerivationSalt"
+    value = var.active_record_encryption_key_derivation_salt
+  }
 
   set {
     name  = "mastodon.smtp.auth_method"
@@ -201,6 +213,11 @@ resource "helm_release" "mastodon" {
   set_sensitive {
     name  = "mastodon.smtp.password"
     value = var.smtp_password
+  }
+
+  set {
+    name  = "mastodon.trusted_proxy_ip"
+    value = var.trusted_proxy_ip
   }
 
   set {
