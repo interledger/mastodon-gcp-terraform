@@ -18,6 +18,10 @@ variable "tls_certificate_name" {
   default = "mastodon-cert"
 }
 
+variable "node_selector" {
+  default = null
+}
+
 # Mastodon Helm chart variables
 # See https://docs.joinmastodon.org/admin/config/
 variable "create_admin" {
