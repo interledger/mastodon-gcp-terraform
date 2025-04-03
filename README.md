@@ -16,12 +16,12 @@ Additional GCP-specific functionality:
 - [Google-managed TLS certificates](https://cloud.google.com/kubernetes-engine/docs/how-to/managed-certs)
 - Ingress rule to redirect `http` traffic to `https`
 
-This project was tested on 2025-03-28 with:
+This project was tested on 2025-04-03 with:
 
 - GKE 1.31.6-gke.1020000
-- helm 3.17.1
-- Mastodon chart 6.2.2 (* see below)
-- Mastodon app 4.3.6
+- helm 3.17.2
+- Mastodon chart 6.3.7 (* see below)
+- Mastodon app 4.3.7
 
 ## How to use
 
@@ -84,6 +84,6 @@ You must generate encryption secrets environment variables before upgrading.
 
 ## License
 
-This is configuration code. This work is marked with CC0 1.0 Universal. It is dedicated to the public domain. See LICENSE file.
+This is configuration code. This work is marked with CC0 1.0 Universal. It is dedicated to the public domain. See LICENSE file. Saying thanks is always appreciated.
 
 [Contributions](./CONTRIBUTING.md) welcomed.
