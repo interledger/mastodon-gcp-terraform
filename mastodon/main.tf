@@ -287,6 +287,10 @@ resource "helm_release" "mastodon" {
     name  = "elasticsearch.enabled"
     value = false
   }
+
+  values = [
+    yamlencode(var.node_selector != null ? { nodeSelector : var.node_selector } : {})
+  ]
 }
 
 # Add ingress rule for redirecting http-to-https
