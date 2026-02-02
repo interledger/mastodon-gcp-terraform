@@ -199,7 +199,7 @@ resource "google_storage_hmac_key" "s3" {
 # Redis cache
 resource "google_redis_instance" "redis" {
   name           = var.redis_instance_name
-  redis_version  = "REDIS_6_X"
+  redis_version  = "REDIS_7_2"
   memory_size_gb = var.redis_size_gb
   region         = var.region
   location_id    = var.zone
