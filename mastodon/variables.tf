@@ -34,6 +34,8 @@ variable "create_admin_username" {
   default = ""
 }
 variable "local_domain" {}
+variable "logLevel_rails" {}
+variable "logLevel_streaming" {}
 variable "otp_secret" {}
 variable "secret_key_base" {}
 variable "smtp_auth_method" {

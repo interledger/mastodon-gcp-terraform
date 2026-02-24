@@ -112,6 +112,15 @@ resource "helm_release" "mastodon" {
   }
 
   set {
+    name  = "mastodon.logLevel.rails"
+    value = var.logLevel_rails
+  }
+  set {
+    name  = "mastodon.logLevel.streaming"
+    value = var.logLevel_streaming
+  }
+
+  set {
     name  = "mastodon.persistence.assets.accessMode"
     value = "ReadWriteMany"
   }

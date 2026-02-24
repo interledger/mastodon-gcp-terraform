@@ -16,12 +16,12 @@ Additional GCP-specific functionality:
 - [Google-managed TLS certificates](https://cloud.google.com/kubernetes-engine/docs/how-to/managed-certs)
 - Ingress rule to redirect `http` traffic to `https`
 
-This project was tested on 2026-01-31 with:
+This project was tested on 2026-02-24 with:
 
-- GKE 1.33.5-gke.2118001
-- helm 4.0.5
-- Mastodon chart 6.6.5 (* see below)
-- Mastodon app 4.5.5
+- GKE 1.33.5-gke.2326000
+- helm 4.1.1
+- Mastodon chart 6.8.3 (* see below)
+- Mastodon app 4.5.7
 
 ## How to use
 
