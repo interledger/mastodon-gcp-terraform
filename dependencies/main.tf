@@ -7,12 +7,12 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">=4.66.0"
+      version = ">= 5.0.0, < 6.0"
     }
 
     google-beta = {
       source  = "hashicorp/google-beta"
-      version = ">= 4.51.0, < 5.0, !=4.65.0, !=4.65.1"
+      version = ">= 5.0.0, < 6.0"
     }
 
     # ec = {
@@ -54,15 +54,14 @@ resource "google_compute_network" "mastodon_vpc" {
 }
 
 resource "google_compute_subnetwork" "mastodon_external_subnet" {
-  name          = var.subnet_name
-  region        = var.region
-  network       = google_compute_network.mastodon_vpc.self_link
-  ip_cidr_range = "10.2.0.0/19"
-  # stack_type                 = "IPV4_IPV6"
-  stack_type               = "IPV4_ONLY"
-  ipv6_access_type         = "EXTERNAL"
-  private_ip_google_access = true
-  # private_ipv6_google_access = "ENABLE_OUTBOUND_VM_ACCESS_TO_GOOGLE"
+  name                       = var.subnet_name
+  region                     = var.region
+  network                    = google_compute_network.mastodon_vpc.self_link
+  ip_cidr_range              = "10.2.0.0/19"
+  stack_type                 = "IPV4_IPV6"
+  ipv6_access_type           = "EXTERNAL"
+  private_ip_google_access   = true
+  private_ipv6_google_access = "ENABLE_OUTBOUND_VM_ACCESS_TO_GOOGLE"
 
   secondary_ip_range = [
     {
@@ -102,18 +101,18 @@ resource "google_compute_firewall" "mastodon_firewall_ipv4" {
   }
 }
 
-# resource "google_compute_firewall" "mastodon_firewall_ipv6" {
-#   name    = var.firewall_name_ipv6
-#   network = google_compute_network.mastodon_vpc.name
+resource "google_compute_firewall" "mastodon_firewall_ipv6" {
+  name    = var.firewall_name_ipv6
+  network = google_compute_network.mastodon_vpc.name
 
-#   direction     = "INGRESS"
-#   source_ranges = ["::/0"]
+  direction     = "INGRESS"
+  source_ranges = ["::/0"]
 
-#   allow {
-#     protocol = "tcp"
-#     ports = ["80", "443"]
-#   }
-# }
+  allow {
+    protocol = "tcp"
+    ports    = ["80", "443"]
+  }
+}
 
 # Reserve IPv4 and IPv6 addresses for DNS
 resource "google_compute_global_address" "reserved_ipv4_address" {
@@ -286,6 +285,7 @@ module "gke" {
   subnetwork                      = var.subnet_name
   ip_range_pods                   = var.kubernetes_pods_ip_range_name
   ip_range_services               = var.kubernetes_services_ip_range_name
+  stack_type                      = "IPV4_IPV6"
   enable_vertical_pod_autoscaling = true
   workload_config_audit_mode      = "BASIC"
   workload_vulnerability_mode     = "BASIC"
