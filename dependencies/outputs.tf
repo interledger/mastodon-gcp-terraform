@@ -1,54 +1,54 @@
 output "gke_endpoint" {
-  value     = module.gke.endpoint
+  value     = module.dependencies.gke_endpoint
   sensitive = true
 }
 
 output "gke_ca_certificate" {
-  value     = module.gke.ca_certificate
+  value     = module.dependencies.gke_ca_certificate
   sensitive = true
 }
 
 output "gcs_name" {
-  value = google_storage_bucket.storage.name
+  value = module.dependencies.gcs_name
 }
 output "gcs_region" {
-  value = google_storage_bucket.storage.location
+  value = module.dependencies.gcs_region
 }
 
 output "s3_access_key" {
-  value     = google_storage_hmac_key.s3.access_id
+  value     = module.dependencies.s3_access_key
   sensitive = true
 }
 output "s3_access_secret" {
-  value     = google_storage_hmac_key.s3.secret
+  value     = module.dependencies.s3_access_secret
   sensitive = true
 }
 
 output "db_hostname" {
-  value = google_sql_database_instance.postgres.private_ip_address
+  value = module.dependencies.db_hostname
 }
 output "db_name" {
-  value = google_sql_database.database.name
+  value = module.dependencies.db_name
 }
 output "db_pass" {
-  value     = google_sql_user.user.password
+  value     = module.dependencies.db_pass
   sensitive = true
 }
 output "db_user" {
-  value = google_sql_user.user.name
+  value = module.dependencies.db_user
 }
 
 output "redis_hostname" {
-  value = google_redis_instance.redis.host
+  value = module.dependencies.redis_hostname
 }
 output "redis_port" {
-  value = google_redis_instance.redis.port
+  value = module.dependencies.redis_port
 }
 output "redis_auth_string" {
-  value     = google_redis_instance.redis.auth_string
+  value     = module.dependencies.redis_auth_string
   sensitive = true
 }
 
 output "ingress_ipv4_name" {
-  value = google_compute_global_address.reserved_ipv4_address.name
+  value = module.dependencies.ingress_ipv4_name
 }
