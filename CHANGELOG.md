@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-10-09
+
+### Changed
+
+- Upgraded the `hashicorp/google` provider to v8.6 and removed the `hashicorp/google-beta` provider
+- Upgraded the `hashicorp/helm` provider to v3.3, which changes `set` and `set_sensitive` from blocks to lists of objects
+- Replaced the `terraform-google-modules/kubernetes-engine` module with a native `google_container_cluster` resource. Workload vulnerability scanning now uses `security_posture_config` instead of the beta-only `protect_config`. Existing deployments must run `terraform state rm module.gke.google_container_cluster.primary` in `./dependencies` before the next `terraform apply` so the cluster is re-imported with the `google` provider.
+
 ## [1.0.2] - 2026-02-24
 
 ### Added

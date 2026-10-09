@@ -1,10 +1,10 @@
 output "gke_endpoint" {
-  value     = module.gke.endpoint
+  value     = google_container_cluster.gke.endpoint
   sensitive = true
 }
 
 output "gke_ca_certificate" {
-  value     = module.gke.ca_certificate
+  value     = google_container_cluster.gke.master_auth[0].cluster_ca_certificate
   sensitive = true
 }
 

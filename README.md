@@ -19,6 +19,7 @@ Additional GCP-specific functionality:
 This project was tested on 2026-10-09 with:
 
 - Terraform v1.16.5
+- Terraform Google provider v8.6.0
 - GKE 1.35.8-gke.1439001
 - helm 4.3.0
 - Mastodon chart 6.10.36.8.3 (* see below)

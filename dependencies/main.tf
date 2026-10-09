@@ -7,12 +7,12 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = ">=4.66.0"
+      version = "~> 8.6"
     }
 
-    google-beta = {
-      source  = "hashicorp/google-beta"
-      version = ">= 4.51.0, < 5.0, !=4.65.0, !=4.65.1"
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.5"
     }
 
     # ec = {
@@ -34,16 +34,6 @@ provider "google" {
   project     = var.project
   credentials = var.credentials_file_path
 }
-provider "google-beta" {
-  region      = var.region
-  zone        = var.zone
-  project     = var.project
-  credentials = var.credentials_file_path
-}
-
-data "google_client_config" "default" {
-  provider = google-beta
-}
 
 # Create VPC, subnet, private services access, firewalls
 resource "google_compute_network" "mastodon_vpc" {
@@ -64,15 +54,14 @@ resource "google_compute_subnetwork" "mastodon_external_subnet" {
   private_ip_google_access = true
   # private_ipv6_google_access = "ENABLE_OUTBOUND_VM_ACCESS_TO_GOOGLE"
 
-  secondary_ip_range = [
-    {
-      range_name    = var.kubernetes_services_ip_range_name,
-      ip_cidr_range = "192.168.0.0/24"
-    },
-    { range_name    = var.kubernetes_pods_ip_range_name,
-      ip_cidr_range = "192.168.64.0/22"
-    }
-  ]
+  secondary_ip_range {
+    range_name    = var.kubernetes_services_ip_range_name
+    ip_cidr_range = "192.168.0.0/24"
+  }
+  secondary_ip_range {
+    range_name    = var.kubernetes_pods_ip_range_name
+    ip_cidr_range = "192.168.64.0/22"
+  }
 }
 
 resource "google_compute_global_address" "private_ip_alloc" {
@@ -221,10 +210,11 @@ resource "google_sql_database_instance" "postgres" {
   depends_on = [google_service_networking_connection.private_service_access]
 
   settings {
-    tier              = var.postgres_tier
-    disk_size         = var.postgres_disk_size
-    disk_autoresize   = true
-    availability_type = var.postgres_availability_type
+    tier                        = var.postgres_tier
+    disk_size                   = var.postgres_disk_size
+    disk_autoresize             = true
+    availability_type           = var.postgres_availability_type
+    deletion_protection_enabled = true
 
     database_flags {
       name  = "cloudsql.iam_authentication"
@@ -246,8 +236,6 @@ resource "google_sql_database_instance" "postgres" {
       enable_private_path_for_google_cloud_services = true
     }
   }
-
-  deletion_protection = true
 }
 
 # The database inside the PostgreSQL server
@@ -274,21 +262,109 @@ data "google_service_account" "terraform_sa" {
   account_id = var.service_account_name
 }
 
-module "gke" {
-  # source = "terraform-google-modules/kubernetes-engine/google"
-  # Autopilot GKE clusters are the recommended default, but not yet available in the non-beta provider
-  source                          = "terraform-google-modules/kubernetes-engine/google//modules/beta-autopilot-public-cluster"
-  project_id                      = var.project
-  name                            = var.mastodon_kubernetes_cluster_name
-  regional                        = true
-  region                          = var.region
-  network                         = var.vpc_name
-  subnetwork                      = var.subnet_name
-  ip_range_pods                   = var.kubernetes_pods_ip_range_name
-  ip_range_services               = var.kubernetes_services_ip_range_name
-  enable_vertical_pod_autoscaling = true
-  workload_config_audit_mode      = "BASIC"
-  workload_vulnerability_mode     = "BASIC"
+# Service account used by the Autopilot nodes
+resource "random_string" "gke_sa_suffix" {
+  upper   = false
+  lower   = true
+  special = false
+  length  = 4
+}
+resource "google_service_account" "gke_nodes" {
+  account_id   = "tf-gke-${substr(var.mastodon_kubernetes_cluster_name, 0, 15)}-${random_string.gke_sa_suffix.result}"
+  display_name = "Terraform-managed service account for cluster ${var.mastodon_kubernetes_cluster_name}"
+}
+resource "google_project_iam_member" "gke_nodes" {
+  for_each = toset([
+    "roles/logging.logWriter",
+    "roles/monitoring.metricWriter",
+    "roles/monitoring.viewer",
+    "roles/stackdriver.resourceMetadata.writer",
+  ])
+
+  project = var.project
+  role    = each.value
+  member  = google_service_account.gke_nodes.member
+}
+
+resource "google_container_cluster" "gke" {
+  name                = var.mastodon_kubernetes_cluster_name
+  location            = var.region
+  enable_autopilot    = true
+  deletion_protection = true
+
+  network         = google_compute_network.mastodon_vpc.id
+  subnetwork      = google_compute_subnetwork.mastodon_external_subnet.id
+  networking_mode = "VPC_NATIVE"
+
+  ip_allocation_policy {
+    cluster_secondary_range_name  = var.kubernetes_pods_ip_range_name
+    services_secondary_range_name = var.kubernetes_services_ip_range_name
+  }
+
+  release_channel {
+    channel = "REGULAR"
+  }
+
+  cluster_autoscaling {
+    auto_provisioning_defaults {
+      service_account = google_service_account.gke_nodes.email
+    }
+  }
+
+  vertical_pod_autoscaling {
+    enabled = true
+  }
+
+  security_posture_config {
+    mode               = "BASIC"
+    vulnerability_mode = "VULNERABILITY_BASIC"
+  }
+
+  maintenance_policy {
+    daily_maintenance_window {
+      start_time = "05:00"
+    }
+  }
+}
+
+# Migrate state from the terraform-google-modules/kubernetes-engine module,
+# which required the google-beta provider. Safe to remove once applied.
+# The cluster cannot be moved across providers. Before the first apply, run:
+#   terraform state rm module.gke.google_container_cluster.primary
+# so that it is re-imported with the google provider.
+import {
+  to = google_container_cluster.gke
+  id = "projects/${var.project}/locations/${var.region}/clusters/${var.mastodon_kubernetes_cluster_name}"
+}
+moved {
+  from = module.gke.random_string.cluster_service_account_suffix
+  to   = random_string.gke_sa_suffix
+}
+moved {
+  from = module.gke.google_service_account.cluster_service_account[0]
+  to   = google_service_account.gke_nodes
+}
+moved {
+  from = module.gke.google_project_iam_member.cluster_service_account-log_writer[0]
+  to   = google_project_iam_member.gke_nodes["roles/logging.logWriter"]
+}
+moved {
+  from = module.gke.google_project_iam_member.cluster_service_account-metric_writer[0]
+  to   = google_project_iam_member.gke_nodes["roles/monitoring.metricWriter"]
+}
+moved {
+  from = module.gke.google_project_iam_member.cluster_service_account-monitoring_viewer[0]
+  to   = google_project_iam_member.gke_nodes["roles/monitoring.viewer"]
+}
+moved {
+  from = module.gke.google_project_iam_member.cluster_service_account-resourceMetadata-writer[0]
+  to   = google_project_iam_member.gke_nodes["roles/stackdriver.resourceMetadata.writer"]
+}
+removed {
+  from = module.gke.random_shuffle.available_zones
+  lifecycle {
+    destroy = false
+  }
 }
 
 # Elastic Cloud instance
