@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-10-10
+
+### Removed
+
+- Removed the one-time `import`, `moved`, and `removed` blocks that migrated the GKE cluster out of the `terraform-google-modules/kubernetes-engine` module. Deployments on 1.x must upgrade to 2.0.0 (tag `v2.0.0`) and run `terraform apply` before upgrading to this version.
+
 ## [2.0.0] - 2026-10-09
 
 ### Changed

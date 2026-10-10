@@ -327,46 +327,6 @@ resource "google_container_cluster" "gke" {
   }
 }
 
-# Migrate state from the terraform-google-modules/kubernetes-engine module,
-# which required the google-beta provider. Safe to remove once applied.
-# The cluster cannot be moved across providers. Before the first apply, run:
-#   terraform state rm module.gke.google_container_cluster.primary
-# so that it is re-imported with the google provider.
-import {
-  to = google_container_cluster.gke
-  id = "projects/${var.project}/locations/${var.region}/clusters/${var.mastodon_kubernetes_cluster_name}"
-}
-moved {
-  from = module.gke.random_string.cluster_service_account_suffix
-  to   = random_string.gke_sa_suffix
-}
-moved {
-  from = module.gke.google_service_account.cluster_service_account[0]
-  to   = google_service_account.gke_nodes
-}
-moved {
-  from = module.gke.google_project_iam_member.cluster_service_account-log_writer[0]
-  to   = google_project_iam_member.gke_nodes["roles/logging.logWriter"]
-}
-moved {
-  from = module.gke.google_project_iam_member.cluster_service_account-metric_writer[0]
-  to   = google_project_iam_member.gke_nodes["roles/monitoring.metricWriter"]
-}
-moved {
-  from = module.gke.google_project_iam_member.cluster_service_account-monitoring_viewer[0]
-  to   = google_project_iam_member.gke_nodes["roles/monitoring.viewer"]
-}
-moved {
-  from = module.gke.google_project_iam_member.cluster_service_account-resourceMetadata-writer[0]
-  to   = google_project_iam_member.gke_nodes["roles/stackdriver.resourceMetadata.writer"]
-}
-removed {
-  from = module.gke.random_shuffle.available_zones
-  lifecycle {
-    destroy = false
-  }
-}
-
 # Elastic Cloud instance
 # External Elasticsearch not yet supported by Mastodon chart
 # Disabled until https://github.com/mastodon/chart/issues/30
