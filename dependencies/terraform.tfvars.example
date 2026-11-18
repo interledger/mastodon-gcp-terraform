@@ -10,6 +10,9 @@ mastodon_domain_name = "example.com"
 
 storage_domain_name = "files.example.com"
 
+# Optional: serve uploads over HTTPS at storage_domain_name (adds a load balancer)
+storage_custom_domain = true
+
 additional_dns_records = [
   {
     type    = "TXT"

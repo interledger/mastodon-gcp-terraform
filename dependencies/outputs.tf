@@ -15,6 +15,11 @@ output "gcs_region" {
   value = google_storage_bucket.storage.location
 }
 
+# Empty when storage_custom_domain is false
+output "s3_alias_host" {
+  value = var.storage_custom_domain ? var.storage_domain_name : ""
+}
+
 output "s3_access_key" {
   value     = google_storage_hmac_key.s3.access_id
   sensitive = true

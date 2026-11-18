@@ -1,11 +1,14 @@
+_ignore/*
+
 # Service account credentials should be downloaded from GCP console
 terraform-sa.json
+server-ca.pem
 
 # Git clone of the Mastodon Helm chart since it is not published anywhere yet
 charts/chart
 
 # No production env vars stored here
-.env.production
+*.env.production
 
 # Created by https://www.toptal.com/developers/gitignore/api/terraform,macos,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=terraform,macos,linux

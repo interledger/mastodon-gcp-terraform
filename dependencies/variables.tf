@@ -108,6 +108,11 @@ variable "redis_tier" {
 
 # S3-compatible storage
 variable "storage_domain_name" {}
+variable "storage_custom_domain" {
+  type        = bool
+  default     = false
+  description = "Serve the uploads bucket over HTTPS at storage_domain_name thru a load balancer"
+}
 
 # Kubernetes
 variable "mastodon_kubernetes_cluster_name" {

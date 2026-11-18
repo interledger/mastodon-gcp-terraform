@@ -74,6 +74,26 @@ provider "helm" {
 # See: https://github.com/mastodon/chart/pull/54
 # Downloading as source as an interim solution
 
+# Custom media domain, set up by storage_custom_domain in the dependencies module.
+# Browsers cache Mastodon's Content-Security-Policy for up to a week, so the
+# domain is first only allowed (EXTRA_MEDIA_HOSTS). Set use_s3_alias_host = true
+# at least a week later to switch media URLs to it (S3_ALIAS_HOST).
+# See https://docs.joinmastodon.org/admin/optional/object-storage/#S3
+locals {
+  s3_alias_host = try(data.terraform_remote_state.dependencies.outputs.s3_alias_host, "")
+
+  s3_alias_host_settings = concat(
+    local.s3_alias_host != "" ? [{
+      name  = "mastodon.extraEnvVars.EXTRA_MEDIA_HOSTS"
+      value = "https://${local.s3_alias_host}"
+    }] : [],
+    local.s3_alias_host != "" && var.use_s3_alias_host ? [{
+      name  = "mastodon.s3.alias_host"
+      value = local.s3_alias_host
+    }] : [],
+  )
+}
+
 resource "helm_release" "mastodon" {
   name      = "mastodon"
   namespace = var.kubernetes_namespace
@@ -83,7 +103,7 @@ resource "helm_release" "mastodon" {
 
   wait = false
 
-  set = [
+  set = concat([
     {
       name  = "mastodon.createAdmin.enabled"
       value = var.create_admin
@@ -242,7 +262,17 @@ resource "helm_release" "mastodon" {
       name  = "elasticsearch.enabled"
       value = false
     },
-  ]
+
+    # The Node.js streaming server does not use TLS to PostgreSQL by default and does
+    # not trust Cloud SQL's internal CA, so encrypt without verifying (traffic stays in
+    # the VPC). This also keeps streaming working if Cloud SQL is set to require TLS.
+    # Streaming only: Rails uses libpq, which defaults to sslmode=prefer and
+    # rejects "no-verify".
+    {
+      name  = "mastodon.streaming.extraEnvVars.DB_SSLMODE"
+      value = "no-verify"
+    },
+  ], local.s3_alias_host_settings)
 
   set_sensitive = [
     {

@@ -1,3 +1,9 @@
+# Deprecated notice
+
+Interledger.social is now hosted by [Toot.io](https://toot.io/mastodon_hosting.html) and this Terraform project is no longer used or updated.
+
+---
+
 # Mastodon on GCP via Terraform
 
 This Terraform project manages the Google Cloud Platform infrastructure necessary for operating the Interledger Foundation's [Mastodon](https://joinmastodon.org/) instance. This repository is intended to be reusable by other people who want to operate a Mastodon instance using GCP.
@@ -62,6 +68,17 @@ Run `terraform init` in both module directories.
 2. Create a `terraform.tfvars` file in `./mastodon/` with the necessary variables. See the [`mastodon/terraform.tfvars.example`](./mastodon/terraform.tfvars.example) file for guidance.
 
 3. `cd ./mastodon && terraform apply`
+
+### Serve uploads from your own domain
+
+By default, media URLs use `https://storage.googleapis.com/<bucket>/...`. To serve them from `storage_domain_name` instead, which lets you change storage providers later without changing media URLs:
+
+1. Set `storage_custom_domain = true` in `./dependencies/terraform.tfvars` and apply. This creates an HTTPS load balancer with a Google-managed certificate and a DNS record for `storage_domain_name`, which must be inside the `mastodon_domain_name` zone. The load balancer costs about USD 18 per month plus traffic.
+2. Wait until the certificate is active: `gcloud compute ssl-certificates describe mastodon-storage-cert --global --format='value(managed.status)'` prints `ACTIVE`. This can take up to an hour.
+3. Apply `./mastodon/`. This adds the domain to Mastodon's Content-Security-Policy (`EXTRA_MEDIA_HOSTS`) without changing any media URLs yet.
+4. At least a week later, set `use_s3_alias_host = true` in `./mastodon/terraform.tfvars` and apply. Mastodon then uses the domain for all media URLs (`S3_ALIAS_HOST`). The wait is needed because browsers cache the Content-Security-Policy for up to a week, so switching sooner shows broken images to some users.
+
+Other servers keep the old `storage.googleapis.com` links for media they already know about. Those links keep working because the bucket does not change.
 
 ## Known limitations
 

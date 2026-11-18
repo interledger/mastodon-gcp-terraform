@@ -175,13 +175,73 @@ resource "google_service_account" "s3" {
   account_id   = "mastodon-gcs-sa"
   display_name = "Mastodon GCS Service Account"
 }
-resource "google_project_iam_member" "s3" {
-  project = var.project
-  role    = "roles/storage.objectAdmin"
-  member  = "serviceAccount:${google_service_account.s3.email}"
+
+resource "google_storage_bucket_iam_member" "s3" {
+  bucket = google_storage_bucket.storage.name
+  role   = "roles/storage.objectAdmin"
+  member = google_service_account.s3.member
 }
 resource "google_storage_hmac_key" "s3" {
   service_account_email = google_service_account.s3.email
+}
+
+# Serve the bucket over HTTPS at storage_domain_name (for example files.example.com).
+# Cloud Storage cannot serve HTTPS on a custom domain itself, so this puts a
+# global external Application Load Balancer with a Google-managed certificate in front.
+# Mastodon uses this hostname when the mastodon module sets S3_ALIAS_HOST.
+resource "google_compute_global_address" "storage" {
+  count = var.storage_custom_domain ? 1 : 0
+
+  name         = "mastodon-storage-ipv4"
+  address_type = "EXTERNAL"
+  ip_version   = "IPV4"
+}
+resource "google_compute_backend_bucket" "storage" {
+  count = var.storage_custom_domain ? 1 : 0
+
+  name        = "mastodon-storage-backend"
+  bucket_name = google_storage_bucket.storage.name
+  enable_cdn  = false
+}
+resource "google_compute_managed_ssl_certificate" "storage" {
+  count = var.storage_custom_domain ? 1 : 0
+
+  name = "mastodon-storage-cert"
+  managed {
+    domains = ["${var.storage_domain_name}."]
+  }
+}
+resource "google_compute_url_map" "storage" {
+  count = var.storage_custom_domain ? 1 : 0
+
+  name            = "mastodon-storage-url-map"
+  default_service = google_compute_backend_bucket.storage[0].id
+}
+resource "google_compute_target_https_proxy" "storage" {
+  count = var.storage_custom_domain ? 1 : 0
+
+  name             = "mastodon-storage-https-proxy"
+  url_map          = google_compute_url_map.storage[0].id
+  ssl_certificates = [google_compute_managed_ssl_certificate.storage[0].id]
+}
+resource "google_compute_global_forwarding_rule" "storage" {
+  count = var.storage_custom_domain ? 1 : 0
+
+  name                  = "mastodon-storage-https"
+  target                = google_compute_target_https_proxy.storage[0].id
+  ip_address            = google_compute_global_address.storage[0].address
+  port_range            = "443"
+  load_balancing_scheme = "EXTERNAL_MANAGED"
+}
+# storage_domain_name must be inside mastodon_domain_name's DNS zone
+resource "google_dns_record_set" "storage" {
+  count = var.storage_custom_domain ? 1 : 0
+
+  name         = "${var.storage_domain_name}."
+  type         = "A"
+  ttl          = 300
+  rrdatas      = [google_compute_global_address.storage[0].address]
+  managed_zone = google_dns_managed_zone.dns_zone.name
 }
 
 

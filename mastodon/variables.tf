@@ -58,6 +58,11 @@ variable "trusted_proxy_ip" {
   # Must escape comma with \\ to prevent error: failed parsing key "mastodon.trusted_proxy_ip" with value 34.96.0.0/20,34.127.192.0/18, key "0/18" has no value
   default = "34.96.0.0/20\\,34.127.192.0/18\\,35.191.0.0/18\\,192.168.0.0/16"
 }
+variable "use_s3_alias_host" {
+  type        = bool
+  default     = false
+  description = "Serve media from the dependencies module's custom storage domain (S3_ALIAS_HOST)."
+}
 variable "vapid_private_key" {}
 variable "vapid_public_key" {}
 
